@@ -1,13 +1,35 @@
-export function PhantomLogo({ className }: { className?: string }) {
-  return (
-    <svg 
-      className={className} 
-      viewBox="0 0 128 128" 
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M112.143 0H15.857C7.099 0 0 7.099 0 15.857v96.286C0 120.901 7.099 128 15.857 128h96.286C120.901 128 128 120.901 128 112.143V15.857C128 7.099 120.901 0 112.143 0z"/>
-      <path d="M82.234 55.689c0-11.722 9.417-21.139 21.139-21.139V24H24v10.55h10.628c11.722 0 21.139 9.417 21.139 21.139v31.792c0 11.722-9.417 21.139-21.139 21.139H24V104h79.373V93.45h-10.628c-11.722 0-21.139-9.417-21.139-21.139V55.689z" fill="#fff"/>
-    </svg>
-  )
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background: #0A0B1F;
+    color: white;
+    font-family: 'Geist', sans-serif;
+    min-height: 100vh;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0B1F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #7B61FF 0%, #5B43F5 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #8B71FF 0%, #6B53FF 100%);
 }
