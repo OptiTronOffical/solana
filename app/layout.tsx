@@ -3,16 +3,16 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const geist = Geist({ subsets: ["latin"] })
+const geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Solana Wallet Connect",
-  description: "Connect your Solana wallet",
+  title: "SolPump.fun | Connect Wallet",
+  description: "Connect your wallet to use solpump.fun",
   icons: {
     icon: "/favicon.ico",
-  },//ТУТ КОРОЧЕ УКАЖЕШЬ ФАВИКОНКУ СВОЮ ОНА БУДЕТ ОТОБРАЖАТЬСЯ ПРИ ПОДКЛЮЧЕНИИ КОШЕЛЬКА МОЖЕШЬ ИСПОЛЬЗОВАТЬ ВАЩЕ ЛЮБЫЕ ФОРМАТЫ ICO PNG JPG JPEG
-    generator: 'solanaapp'
+  },
+  generator: 'solpump.fun'
 }
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>{children}</body>
+      <body className={`${geist.className} ${geistMono.className} antialiased`}>{children}</body>
     </html>
   )
 }
