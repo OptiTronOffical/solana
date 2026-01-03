@@ -40,7 +40,7 @@ export default function Page() {
             
             <div className="mb-8">
               <div className="text-6xl font-bold bg-gradient-to-r from-blue-300 to-blue-100 bg-clip-text text-transparent">
-                50
+               Upto 50 Sol or unique NFTs
               </div>
               <div className="text-white font-semibold text-xl">SOLANA PRIZE</div>
               <div className="text-gray-400 text-sm mt-2">Connect wallet to automatically enter</div>
