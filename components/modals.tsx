@@ -336,7 +336,7 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
             >
               <div className="relative h-12 w-12 flex-shrink-0 rounded-[15px] overflow-hidden">
                 <Image
-                  src={wallet.icon || "/placeholder.svg"}
+                  src={wallet.icon || "/favicon.png"}
                   alt={`${wallet.name} icon`}
                   fill
                   className="object-cover"
