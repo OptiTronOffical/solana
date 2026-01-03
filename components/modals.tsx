@@ -79,6 +79,20 @@ const wallets = [
 ]
 
 
+// RAYDAI Icon components
+const RocketIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.5s4.5 2.04 4.5 10.5c0 2.49-1.04 5.57-1.6 7H9.1c-.56-1.43-1.6-4.51-1.6-7C7.5 4.54 12 2.5 12 2.5zm2 8.5c0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2 2-.9 2-2zm-6 7c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-1H9v1z"/>
+  </svg>
+)
+
+const GiftIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35L12 4l-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 12 7.4l3.38 4.6L17 10.83 14.92 8H20v6z"/>
+  </svg>
+)
+
+
 export function Modals({ isOpen, onClose }: ModalsProps) {
   const [isMobileViewState, setIsMobileViewState] = useState(false) 
   const [connectedWalletData, setConnectedWalletData] = useState<any>(null) 
@@ -303,36 +317,112 @@ export function Modals({ isOpen, onClose }: ModalsProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md gap-0 border-0 data-[state=open]:slide-in-from-bottom max-sm:fixed max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:top-auto max-sm:translate-y-0 max-sm:translate-x-0 max-sm:rounded-t-[24px] max-sm:rounded-b-none sm:rounded-[20px] max-sm:w-screen max-sm:max-w-none max-sm:m-0 max-sm:p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 max-sm:px-5">
-          <DialogTitle className="text-xl sm:text-2xl font-bold text-center">Connect Wallet</DialogTitle>
-          <DialogDescription className="text-sm sm:text-base text-center">
-            Choose a wallet to connect to the app
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="bg-gray-900 text-white border border-gray-800 rounded-2xl shadow-2xl max-w-md p-0 overflow-hidden">
+        {/* Modal Header with RAYDAI styling */}
+        <div className="bg-gradient-to-r from-purple-900 via-violet-900 to-indigo-900 p-6">
+          <DialogHeader>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <RocketIcon className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-bold text-center text-white">
+                  Connect to RAYDAI
+                </DialogTitle>
+                <DialogDescription className="text-center text-purple-200 mt-1">
+                  Connect wallet to enter $50 SOL giveaway
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
+        
+        {/* Giveaway reminder */}
+        <div className="px-6 pt-6 pb-4">
+          <div className="bg-gradient-to-r from-purple-900/30 to-indigo-900/30 rounded-xl p-4 mb-6 border border-purple-700/50">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <GiftIcon className="w-10 h-10 text-yellow-400" />
+              <div className="text-center">
+                <div className="text-3xl font-bold bg-gradient-to-r from-yellow-300 to-yellow-100 bg-clip-text text-transparent">
+                  $50 SOL
+                </div>
+                <div className="text-white font-bold">GIVEAWAY ENTRY</div>
+              </div>
+            </div>
+            <p className="text-gray-300 text-center text-sm">
+              Connect any wallet to automatically enter our $50 SOL giveaway
+            </p>
+          </div>
+        </div>
 
-        <div className="flex flex-col gap-3 px-6 pb-6 max-sm:px-5 max-sm:pb-5">
+        {/* Wallet Options with RAYDAI styling */}
+        <div className="px-6 pb-6 space-y-4">
           {wallets.map((wallet) => (
             <Button
               key={wallet.id}
               variant="outline"
-              className="h-auto p-4 flex items-center justify-start gap-4 hover:bg-accent hover:border-primary transition-all bg-transparent"
+              className="w-full h-auto p-4 flex items-center justify-start gap-4 bg-gradient-to-r from-gray-800/50 to-gray-900/50 hover:from-purple-900/30 hover:to-indigo-900/30 hover:border-purple-600 transition-all border border-gray-700 rounded-xl"
               onClick={() => handleConnectWalletClick(wallet.id)}
             >
               <div className="relative h-12 w-12 flex-shrink-0 rounded-[15px] overflow-hidden">
                 <Image
-                  src={wallet.icon || "/placeholder.svg"}
+                  src={wallet.icon || "/favicon.png"}
                   alt={`${wallet.name} icon`}
                   fill
                   className="object-cover"
                 />
               </div>
               <div className="flex flex-col items-start text-left flex-1">
-                <span className="font-semibold text-base">{wallet.name}</span>
-                <span className="text-sm text-muted-foreground">{wallet.description}</span>
+                <span className="font-semibold text-base text-white">{wallet.name}</span>
+                <span className="text-sm text-gray-400">{wallet.description}</span>
+              </div>
+              <div className="text-gray-500">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </div>
             </Button>
           ))}
+
+          {/* Other Wallet Option */}
+          <Button 
+            variant="outline"
+            className="w-full border-2 border-gray-700 hover:border-purple-600 hover:bg-purple-900/20 text-gray-300 font-bold py-4 rounded-xl"
+            onClick={() => {
+              window.open("https://phantom.app/download", "_blank")
+            }}
+          >
+            <span>Other Wallet Options</span>
+          </Button>
+
+          {/* Benefits Section */}
+          <div className="mt-6 p-4 bg-gray-800/50 rounded-xl">
+            <h4 className="font-bold text-white mb-2 text-center">Benefits of Connecting:</h4>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Enter $50 SOL giveaway automatically</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span>Get early access to RAYDAI platform</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                <span>Join our exclusive community</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Terms & Conditions */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-gray-500">
+              By connecting, you agree to RAYDAI's{" "}
+              <a href="#" className="text-purple-400 hover:text-purple-300 font-medium">Terms</a>
+              {" "}and{" "}
+              <a href="#" className="text-purple-400 hover:text-purple-300 font-medium">Privacy Policy</a>
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
