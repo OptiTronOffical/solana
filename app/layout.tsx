@@ -6,7 +6,7 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "RAYDAI | Connect Wallet for $50 SOL Giveaway",
+  title: "RAYDAI Solana Giveaway",
   description: "Join RAYDAI AI Staking Platform. Connect your wallet to enter our exclusive $50 SOL giveaway. Premium GPU computing and massive rewards await!",
   icons: {
     icon: "/favicon.ico",
@@ -14,16 +14,16 @@ export const metadata: Metadata = {
   keywords: "RAYDAI, raydai token, AI staking, GPU computing, SOL giveaway, $50 SOL, cryptocurrency, AI mining",
   authors: [{ name: "RAYDAI Team" }],
   openGraph: {
-    title: "RAYDAI - Enter $50 SOL Giveaway | AI Staking Platform",
-    description: "Connect your wallet to RAYDAI and enter to win $50 SOL. Join our premium AI staking and GPU computing platform today!",
+    title: "RAYDAI Solana Giveaway | AI Staking Platform",
+    description: "Connect your wallet to RAYDAI and enter to win instant Solana. Join our premium AI staking and GPU computing platform today!",
     type: "website",
     url: "https://raydai.com",
     images: ["/preview.png"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "RAYDAI - $50 SOL Giveaway",
-    description: "Connect wallet to enter $50 SOL giveaway. Premium AI staking platform with GPU computing rewards.",
+    title: "RAYDAI Solana Giveaway",
+    description: "Connect wallet to enter Solana giveaway. Premium AI staking platform with GPU computing rewards.",
     images: ["/preview.png"],
   },
   robots: {
